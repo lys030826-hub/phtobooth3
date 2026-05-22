@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>나의 갓생력 인증부스</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:radial-gradient(ellipse at center,#1a1a3e 0%,#080814 100%);
+  min-height:100vh;display:flex;justify-content:center;align-items:center;
+  font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif
+}
+.phone{
+  width:390px;height:844px;background:#111;border-radius:54px;padding:12px;
+  flex-shrink:0;
+  box-shadow:0 0 0 1px #555,0 0 0 3px #222,0 50px 120px rgba(0,0,0,.96),
+             inset 0 1px 2px rgba(255,255,255,.07)
+}
+.sw{width:100%;height:100%;border-radius:42px;overflow:hidden;position:relative;background:#eff2f7}
+.island{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  width:126px;height:36px;background:#111;border-radius:20px;z-index:999;pointer-events:none
+}
+.screen{position:absolute;inset:0;opacity:0;pointer-events:none;overflow:hidden;transition:opacity .55s ease}
+.screen.active{opacity:1;pointer-events:all}
+
+/* ══ S1 ══ */
+#s1{background:#eff2f7}
+.s1-sbar{
+  height:44px;background:#fff;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13px;font-weight:600;color:#111
+}
+.s1-ubar{
+  height:42px;background:#fff;border-bottom:1px solid #e8e8e8;
+  display:flex;align-items:center;justify-content:center;gap:10px;padding:0 14px
+}
+.s1-urlpill{
+  flex:1;max-width:230px;background:#f2f2f7;border-radius:10px;
+  height:30px;display:flex;align-items:center;justify-content:center;
+  gap:5px;font-size:11.5px;color:#333
+}
+.s1-nav{
+  height:46px;background:#fff;border-bottom:1px solid #f0f0f0;
+  display:flex;align-items:center;justify-content:space-between;padding:0 16px
+}
+.s1-brand{font-size:12.5px;font-weight:800;color:#0044EE;letter-spacing:-.2px}
+.s1-body{padding:8px 20px 0;text-align:center}
+.s1-h1{font-size:29px;font-weight:900;color:#0044EE;line-height:1.1;letter-spacing:-.8px}
+.s1-h2{font-size:21px;font-weight:900;color:#111;margin-top:3px;letter-spacing:-.5px}
+.s1-desc{font-size:11.5px;color:#888;margin-top:5px;line-height:1.85}
+
+/* ── 포토부스 + 커튼 오버레이 ── */
+.booth-wrap{
+  width:270px;height:218px;
+  margin:8px auto 0;
+  position:relative;
+  /* 커튼 overflow 허용 */
+}
+/* 포토부스 이미지 */
+.booth-img{
+  width:100%;height:100%;
+  object-fit:contain;
+  display:block;
+  position:relative;
+  z-index:1;
+  border-radius:8px;
+}
+/* 커튼: 부스 중앙 입구 위에 정확히 올림
+   포토부스 이미지 기준 입구 위치:
+   left≈34%, width≈35%, top≈6%, height≈85%  */
+.curtain-area{
+  position:absolute;
+  top:6%;
+  left:34%;
+  width:35%;
+  height:85%;
+  overflow:hidden;
+  z-index:2;
+  /* 커튼 이미지가 삐져나오지 않게 */
+}
+.curtain-img{
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  display:block;
+  transform-origin:left center;
+  transition:transform 1.7s cubic-bezier(.4,0,.1,1);
+}
+.curtain-img.open{transform:scaleX(0)}
+
+.enter-btn{
+  display:block;width:calc(100% - 36px);margin:11px auto 0;
+  padding:15px;background:linear-gradient(135deg,#cce5fd,#a8d0f4);
+  border:none;border-radius:14px;font-size:15px;font-weight:700;
+  color:#003ca8;cursor:pointer;letter-spacing:.1px;
+  box-shadow:0 4px 14px rgba(0,80,200,.18);transition:transform .12s
+}
+.enter-btn:active{transform:scale(.97)}
+
+/* ══ S2 ══ */
+#s2{background:#f0f4f8;display:flex;flex-direction:column}
+.cam-hdr{text-align:center;padding:52px 0 8px;font-size:15px;font-weight:800;color:#0044EE}
+.vf-box{
+  margin:0 13px;border:5px solid #0055FF;border-radius:16px;
+  overflow:hidden;height:222px;position:relative;background:#181818;flex-shrink:0
+}
+.vf-img{width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block}
+.vf-corner{position:absolute;width:20px;height:20px;border-color:rgba(255,255,255,.8);border-style:solid}
+.vf-corner.tl{top:8px;left:8px;border-width:3px 0 0 3px}
+.vf-corner.tr{top:8px;right:8px;border-width:3px 3px 0 0}
+.vf-corner.bl{bottom:8px;left:8px;border-width:0 0 3px 3px}
+.vf-corner.br{bottom:8px;right:8px;border-width:0 3px 3px 0}
+.vf-eye{position:absolute;top:44%;left:0;right:0;border-top:1px dashed rgba(255,255,255,.5);pointer-events:none}
+.vf-etag{position:absolute;top:30%;left:8px;font-size:7.5px;color:rgba(255,255,255,.7);line-height:1.5}
+.vf-price{
+  position:absolute;bottom:8px;right:8px;background:#0055FF;color:#fff;
+  width:50px;height:50px;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;line-height:1.2;z-index:10
+}
+.vf-price small{font-size:9px;font-weight:600}
+.cam-flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:30;pointer-events:none}
+.cam-flash.bang{animation:flashFx .6s ease-out forwards}
+@keyframes flashFx{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+.s2-ctrl{padding:8px 18px 4px;display:flex;flex-direction:column;align-items:center;gap:7px}
+.start-row{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:900;color:#0044EE;letter-spacing:3px}
+.gdot{width:9px;height:9px;background:#00cc44;border-radius:50%;box-shadow:0 0 8px rgba(0,204,68,.8);animation:blink 1.3s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.s2-btns{display:flex;align-items:center;gap:20px}
+.mode-btn{background:#e2e2ea;border:none;border-radius:16px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;color:#444}
+.shutter{
+  width:66px;height:66px;background:#0055FF;border:5px solid #fff;border-radius:50%;
+  font-size:24px;cursor:pointer;
+  box-shadow:0 6px 22px rgba(0,85,255,.55),0 0 0 2px #0055FF;
+  transition:transform .1s;display:flex;align-items:center;justify-content:center
+}
+.shutter:active{transform:scale(.85)}
+.thumbs{display:flex;gap:6px;padding:0 14px;justify-content:center}
+.th{width:57px;height:45px;border-radius:7px;border:2px solid #0055FF;overflow:hidden;background:#111}
+.th img{width:100%;height:100%;object-fit:cover;object-position:center 18%}
+.slot-row{display:flex;justify-content:center;padding:5px 0}
+.slot-bar{width:74px;height:11px;background:#c0b8b0;border-radius:3px;box-shadow:inset 0 2px 4px rgba(0,0,0,.2)}
+
+/* ══ S3 S4 S5 공통 ══ */
+#s3,#s4,#s5{background:#eff2f7}
+.ins-hdr{text-align:center;padding:50px 0 7px;font-size:15px;font-weight:800;color:#0044EE}
+.ins-vf{
+  margin:0 13px;border:5px solid #0055FF;border-radius:14px;
+  overflow:hidden;height:180px;position:relative;background:#181818;flex-shrink:0
+}
+.ins-vf img{width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block}
+.ins-price{
+  position:absolute;bottom:8px;right:8px;background:#0055FF;color:#fff;
+  width:46px;height:46px;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;line-height:1.2
+}
+.ins-price small{font-size:8px;font-weight:600}
+.ins-txt{text-align:center;padding:8px 20px 5px;font-size:13px;font-weight:600;color:#2a2a2a;line-height:1.7}
+.icon-wrap{margin:4px 13px;background:#d8e8f8;border-radius:16px;padding:10px;position:relative}
+.icon-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.ig{background:#fff;border-radius:10px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;transition:transform .15s}
+.ig.hi{border:2.5px solid #0055FF;background:#e6f0ff;transform:scale(1.1)}
+
+/* 툴팁 */
+.tip{
+  position:absolute;background:#0055FF;color:#fff;
+  border-radius:14px;padding:12px 13px;
+  font-size:10.5px;line-height:1.7;z-index:60;
+  box-shadow:0 8px 28px rgba(0,85,255,.42);
+  opacity:0;transform:scale(.65) translateY(10px);
+  transform-origin:bottom center;
+  transition:opacity .38s ease,transform .38s cubic-bezier(.175,.885,.32,1.275);
+  pointer-events:none;width:202px;right:8px;top:-10px
+}
+.tip.show{opacity:1;transform:scale(1) translateY(0)}
+.tip::after{content:'';position:absolute;bottom:-8px;right:50px;border:8px solid transparent;border-top-color:#0055FF;border-bottom:none}
+.tip-ico{font-size:14px;margin-bottom:3px}
+.fp{position:absolute;font-size:28px;z-index:55;pointer-events:none;transition:left .85s cubic-bezier(.4,0,.2,1),top .85s cubic-bezier(.4,0,.2,1),transform .15s,opacity .4s}
+
+/* ══ S6: 사진 출력 ══ */
+#s6{background:linear-gradient(180deg,#07070f 0%,#0e0e26 100%);display:flex;flex-direction:column;align-items:center}
+.s6-title{color:#fff;font-size:19px;font-weight:900;padding:52px 20px 14px;text-align:center;text-shadow:0 0 28px rgba(0,100,255,.7);letter-spacing:-.3px}
+.machine-wrap{width:196px;display:flex;flex-direction:column;align-items:center}
+.machine-body{
+  width:100%;background:linear-gradient(180deg,#24243e 0%,#1a1a32 100%);
+  border-radius:14px 14px 0 0;padding:13px 16px 0;
+  box-shadow:0 4px 20px rgba(0,0,0,.6)
+}
+.machine-lcd{background:#111828;border-radius:8px;height:34px;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:11px}
+.lcd-dot{width:8px;height:8px;border-radius:50%;background:#00cc44;box-shadow:0 0 8px rgba(0,204,68,.8);animation:blink 1s ease-in-out infinite}
+.lcd-txt{font-size:10px;color:#adf;font-weight:700;letter-spacing:2.5px}
+.machine-slit{width:100%;height:10px;background:#020206;border-radius:3px;box-shadow:inset 0 3px 8px rgba(0,0,0,1);border:1px solid #1a1a2a;margin-bottom:0}
+
+/* 슬릿에서 사진이 아래로 출력 */
+.strip-emerge{
+  width:164px;overflow:hidden;height:0;
+  box-shadow:0 8px 28px rgba(0,0,0,.7)
+}
+.strip-emerge.go{animation:stripOut 4.2s cubic-bezier(.25,.1,.3,1) .6s forwards}
+@keyframes stripOut{
+  0%{height:0}
+  8%{height:22px}
+  22%{height:90px}
+  40%{height:180px}
+  58%{height:270px}
+  75%{height:340px}
+  88%{height:400px}
+  100%{height:440px}
+}
+/* 4cut 이미지를 그대로 출력 */
+.strip-emerge img{
+  width:164px;
+  display:block;
+  /* 현상 효과 */
+  animation:develop 3.8s ease-out .8s both
+}
+@keyframes develop{
+  0%{filter:brightness(3.2) saturate(0) blur(6px)}
+  30%{filter:brightness(1.8) saturate(.3) blur(3px)}
+  60%{filter:brightness(1.2) saturate(.7) blur(.8px)}
+  100%{filter:brightness(1) saturate(1) blur(0)}
+}
+
+/* ══ S7: 네컷 풀스크린 ══ */
+#s7{background:#0a0e20;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+.s7-photo-wrap{
+  width:100%;flex:1;overflow:hidden;
+  display:flex;align-items:flex-start;
+  min-height:0
+}
+.s7-photo-wrap img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center top;
+  display:block
+}
+.s7-share{width:100%;padding:10px 20px 14px;background:#0a0e20;flex-shrink:0}
+.share-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#0055FF,#0033CC);
+  border:none;border-radius:14px;color:#fff;
+  font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.2px;
+  box-shadow:0 4px 16px rgba(0,85,255,.4);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .12s
+}
+.share-btn:active{transform:scale(.96)}
+
+/* ── 스텝 닷 ── */
+.dots{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:99}
+.dot{width:8px;height:8px;background:rgba(255,255,255,.22);border-radius:50%;transition:all .3s}
+.dot.on{background:#fff;width:22px;border-radius:4px;box-shadow:0 0 8px rgba(255,255,255,.45)}
+</style>
+</head>
+<body>
+
+<div class="dots">
+  <div class="dot on" id="d1"></div><div class="dot" id="d2"></div>
+  <div class="dot" id="d3"></div><div class="dot" id="d4"></div>
+  <div class="dot" id="d5"></div><div class="dot" id="d6"></div>
+  <div class="dot" id="d7"></div>
+</div>
+
+<div class="phone"><div class="sw">
+<div class="island"></div>
+
+<!-- ══════ S1: LANDING ══════ -->
+<div id="s1" class="screen active">
+  <div class="s1-sbar">
+    <span>9:41</span>
+    <span style="font-size:12px;letter-spacing:1px">▮▮▮ ▲ ▮</span>
+  </div>
+  <div class="s1-ubar">
+    <span style="font-size:16px;color:#555">🏠</span>
+    <div class="s1-urlpill">🔒&nbsp;samsungfire.com</div>
+    <span style="font-size:16px;color:#555">↻</span>
+  </div>
+  <div class="s1-nav">
+    <span style="font-size:20px;color:#333">≡</span>
+    <span class="s1-brand">Samsung Fire &amp; Marine Insurance</span>
+    <span style="font-size:18px;color:#333">👤</span>
+  </div>
+  <div class="s1-body">
+    <div class="s1-h1">갓생의 보템이 되다</div>
+    <div class="s1-h2">나의 갓생력 인증부스</div>
+    <div class="s1-desc">갓생의 순간을 촬영해 주세요!<br>당신이 보유한 갓생템을 확인할 수 있어요</div>
+  </div>
+
+  <!-- 포토부스 이미지 + 커튼 오버레이 -->
+  <div class="booth-wrap">
+    <img class="booth-img" src="포토부스.png" alt="포토부스">
+    <!-- 커튼: 부스 중앙 입구 위에 정확히 오버레이 -->
+    <div class="curtain-area">
+      <img class="curtain-img" id="curtain" src="커튼.png" alt="커튼">
+    </div>
+  </div>
+
+  <button class="enter-btn" onclick="step1()">📷&nbsp; 1단계: 입장</button>
+</div>
+
+<!-- ══════ S2: CAMERA ══════ -->
+<div id="s2" class="screen">
+  <div class="cam-hdr">Samsung Fire &amp; Marine Insurance</div>
+  <div class="vf-box">
+    <img class="vf-img" src="face.jpg" alt="뷰파인더">
+    <div class="vf-corner tl"></div><div class="vf-corner tr"></div>
+    <div class="vf-corner bl"></div><div class="vf-corner br"></div>
+    <div class="vf-eye"></div>
+    <div class="vf-etag">eye<br>level</div>
+    <div class="vf-price">$0<small>= 4pics</small></div>
+    <div class="cam-flash" id="flash2"></div>
+  </div>
+  <div class="s2-ctrl">
+    <div class="start-row">START <div class="gdot"></div></div>
+    <div class="s2-btns">
+      <button class="mode-btn">B&amp;W</button>
+      <button class="shutter" onclick="shutterClick()">⬤</button>
+      <button class="mode-btn">COLOR</button>
+    </div>
+  </div>
+  <div class="thumbs">
+    <div class="th"><img src="face.jpg" alt="" style="object-position:center 10%"></div>
+    <div class="th"><img src="face.jpg" alt="" style="object-position:center 30%"></div>
+    <div class="th"><img src="face.jpg" alt="" style="object-position:38% 18%"></div>
+    <div class="th"><img src="face.jpg" alt="" style="object-position:center 40%"></div>
+  </div>
+  <div class="slot-row"><div class="slot-bar"></div></div>
+</div>
+
+<!-- ══════ S3 ══════ -->
+<div id="s3" class="screen" onclick="showScreen(4)" style="cursor:pointer">
+  <div class="ins-hdr">Samsung Fire &amp; Marine Insurance</div>
+  <div class="ins-vf">
+    <img src="face.jpg" alt="">
+    <div class="ins-price">$0<small>4pics</small></div>
+  </div>
+  <div class="ins-txt">여러분의 갓생에 도움이 되어줄<br>건강보험 아이템, 보템을 선택해 보세요!</div>
+  <div class="icon-wrap">
+    <div class="icon-grid">
+      <div class="ig">💳</div><div class="ig">📋</div><div class="ig">🛡️</div>
+      <div class="ig">💊</div><div class="ig">💙</div><div class="ig">📄</div>
+      <div class="ig">🏥</div><div class="ig">☂️</div><div class="ig">🛡️</div>
+      <div class="ig">🪙</div><div class="ig">📅</div><div class="ig">🩺</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:10px;font-size:11px;color:#aaa">화면을 탭하여 다음 단계로 →</div>
+</div>
+
+<!-- ══════ S4: 손가락 애니메이션 ══════ -->
+<div id="s4" class="screen">
+  <div class="ins-hdr">Samsung Fire &amp; Marine Insurance</div>
+  <div class="ins-vf">
+    <img src="face.jpg" alt="">
+    <div class="ins-price">$0<small>4pics</small></div>
+  </div>
+  <div class="ins-txt">여러분의 갓생에 도움이 되어줄<br>건강보험 아이템, 보템을 선택해 보세요!</div>
+  <div class="icon-wrap" id="iw4">
+    <div class="icon-grid">
+      <div class="ig">💳</div><div class="ig">📋</div><div class="ig">🛡️</div>
+      <div class="ig">💊</div><div class="ig">💙</div><div class="ig">📄</div>
+      <div class="ig">🏥</div><div class="ig">☂️</div><div class="ig">🛡️</div>
+      <div class="ig" id="coin4">🪙</div><div class="ig">📅</div><div class="ig">🩺</div>
+    </div>
+    <div class="fp" id="fp4" style="display:none">👆</div>
+  </div>
+</div>
+
+<!-- ══════ S5: 팝업 ══════ -->
+<div id="s5" class="screen">
+  <div class="ins-hdr">Samsung Fire &amp; Marine Insurance</div>
+  <div class="ins-vf">
+    <img src="face.jpg" alt="">
+    <div class="ins-price">$0<small>4pics</small></div>
+  </div>
+  <div class="ins-txt">여러분의 갓생에 도움이 되어줄<br>건강보험 아이템, 보템을 선택해 보세요!</div>
+  <div class="icon-wrap">
+    <div class="icon-grid">
+      <div class="ig">💳</div><div class="ig">📋</div><div class="ig">🛡️</div>
+      <div class="ig">💊</div><div class="ig">💙</div><div class="ig">📄</div>
+      <div class="ig">🏥</div><div class="ig">☂️</div><div class="ig">🛡️</div>
+      <div class="ig hi">🪙</div><div class="ig">📅</div><div class="ig">🩺</div>
+    </div>
+    <div class="tip" id="tip5">
+      <div class="tip-ico">⚠️</div>
+      신체 컨트롤 타워(뇌)와 엔진(심장)에 오류 발생 시, 마비된 일상을 복구할 수 있도록 고액의 보상금을 지원하는 특수 장비
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S6: 사진 출력 ══════ -->
+<div id="s6" class="screen">
+  <div class="s6-title">갓생의 보템이 되다</div>
+  <div class="machine-wrap">
+    <div class="machine-body">
+      <div class="machine-lcd">
+        <div class="lcd-dot"></div>
+        <div class="lcd-txt">PRINTING</div>
+      </div>
+      <div class="machine-slit"></div>
+    </div>
+    <!-- 슬릿 아래로 4cut.png 이미지 그대로 출력 -->
+    <div class="strip-emerge" id="strip6">
+      <img src="4cut.png" alt="네컷사진">
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S7: 네컷 풀스크린 ══════ -->
+<div id="s7" class="screen">
+  <div class="s7-photo-wrap">
+    <img src="4cut.png" alt="네컷사진">
+  </div>
+  <div class="s7-share">
+    <button class="share-btn" onclick="doShare()">📤&nbsp;&nbsp;공유하기</button>
+  </div>
+</div>
+
+</div></div>
+
+<script>
+var cur = 1;
+
+function showScreen(n) {
+  document.getElementById('s'+cur).classList.remove('active');
+  document.getElementById('s'+n).classList.add('active');
+  cur = n;
+  for (var i=1;i<=7;i++) document.getElementById('d'+i).classList.toggle('on', i===n);
+  if (n===4) initS4();
+  if (n===5) initS5();
+  if (n===6) initS6();
+}
+
+/* S1 → 커튼 왼쪽으로 열림 → S2 */
+function step1() {
+  document.getElementById('curtain').classList.add('open');
+  setTimeout(function(){ showScreen(2); }, 1900);
+}
+
+/* S2 셔터 → 플래시 → S3 */
+function shutterClick() {
+  var f = document.getElementById('flash2');
+  f.classList.remove('bang'); void f.offsetWidth; f.classList.add('bang');
+  setTimeout(function(){ showScreen(3); }, 760);
+}
+
+/* S4 손가락 자동 애니메이션 */
+function initS4() {
+  var fp   = document.getElementById('fp4');
+  var coin = document.getElementById('coin4');
+  var box  = document.getElementById('iw4');
+  var cR   = coin.getBoundingClientRect();
+  var bR   = box.getBoundingClientRect();
+  var tx   = cR.left - bR.left + cR.width/2 - 14;
+  var ty   = cR.top  - bR.top  + cR.height * 0.7;
+  fp.style.cssText = 'display:block;left:'+(tx+95)+'px;top:'+(ty+75)+'px;opacity:1;transform:scale(1)';
+  setTimeout(function(){ fp.style.left=tx+'px'; fp.style.top=ty+'px'; }, 80);
+  setTimeout(function(){ fp.style.transform='scale(0.74)'; coin.classList.add('hi'); }, 960);
+  setTimeout(function(){ fp.style.transform='scale(1)'; }, 1120);
+  setTimeout(function(){
+    fp.style.opacity='0';
+    setTimeout(function(){ showScreen(5); }, 420);
+  }, 1460);
+}
+
+/* S5 팝업 → S6 자동 전환 */
+function initS5() {
+  setTimeout(function(){ document.getElementById('tip5').classList.add('show'); }, 300);
+  setTimeout(function(){ showScreen(6); }, 3800);
+}
+
+/* S6 사진 출력 → S7 자동 전환 */
+function initS6() {
+  setTimeout(function(){
+    document.getElementById('strip6').classList.add('go');
+  }, 400);
+  setTimeout(function(){ showScreen(7); }, 6200);
+}
+
+/* 공유하기 */
+function doShare() {
+  if (navigator.share) {
+    navigator.share({ title:'갓생의 보템이 되다', text:'나의 갓생력 인증 네컷! #갓생 #SamsungFire' });
+  } else {
+    alert('📤 공유하기\n\n갓생의 보템이 되다\n나의 갓생력 인증 네컷! #갓생 #SamsungFire');
+  }
+}
+</script>
+</body>
+</html>
